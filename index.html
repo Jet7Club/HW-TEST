@@ -73,7 +73,32 @@ es:{tag:"Tu brújula vital",hero:"Descubre lo que realmente te impulsa.",sub:"Ci
 const labels=[
 [["Love & Connection","Freedom & Happiness","Growth & Discovery","Purpose & Contribution","Legacy & Impact"],["Amour et relations","Liberté et bonheur","Évolution et découverte","Sens et contribution","Héritage et impact"],["Amor y conexión","Libertad y felicidad","Crecimiento y descubrimiento","Propósito y contribución","Legado e impacto"]],
 [["Health & Vitality","Love & Family","Freedom & Independence","Financial Security & Wealth","Personal Growth & Wisdom","Purpose & Contribution","Happiness & Experiences","Achievement & Recognition","Legacy & Transmission","Inner Peace & Spirituality"],["Santé et vitalité","Amour et famille","Liberté et indépendance","Sécurité financière et prospérité","Développement et sagesse","Sens et contribution","Bonheur et expériences","Réussite et reconnaissance","Héritage et transmission","Paix intérieure et spiritualité"],["Salud y vitalidad","Amor y familia","Libertad e independencia","Seguridad financiera y prosperidad","Crecimiento y sabiduría","Propósito y contribución","Felicidad y experiencias","Logros y reconocimiento","Legado y transmisión","Paz interior y espiritualidad"]]];
-let lang="en",step=0,answers=[[],[],null,null,null];const $=id=>document.getElementById(id),tr=()=>T[lang],li=()=>({en:0,fr:1,es:2})[lang];function show(id){["intro","quiz","result","deep-details","deep-quiz","deep-report"].forEach(x=>{const el=$(x);if(el)el.classList.toggle("hidden",x!==id)})}function translate(){let t=tr();["tag","hero","sub","start","back","restart","resulttitle","prioritytitle","deep","transition"].forEach(k=>$(k).textContent=t[k]);if(!$("quiz").classList.contains("hidden"))render();if(!$("result").classList.contains("hidden"))results()}function render(){let t=tr(),max=step===0?2:3;$("bar").style.width=((step+1)/5*100)+"%";$("count").textContent=(step+1)+" / 5";$("question").textContent=t.questions[step];$("hint").textContent=step<2?t.hint.replace("{n}",max):"1 — 5";$("options").innerHTML="";let opts=step<2?labels[step][li()]:["1","2","3","4","5"];opts.forEach((label,i)=>{let b=document.createElement("button");b.className="option"+(step<2?answers[step].includes(i)?" active":"":answers[step]===i+1?" active":"");if(step>=2){let terms={fr:["Pas du tout d’accord","Plutôt pas d’accord","Neutre / mitigé","Plutôt d’accord","Tout à fait d’accord"],en:["Strongly disagree","Disagree","Neutral / mixed","Agree","Strongly agree"],es:["Totalmente en desacuerdo","En desacuerdo","Neutral / mixto","De acuerdo","Totalmente de acuerdo"]};b.classList.add("hw-first-scale");b.innerHTML="<strong>"+label+"</strong><small>"+terms[lang][i]+"</small>"}else b.textContent=label;b.onclick=()=>{if(step<2){let arr=answers[step];if(arr.includes(i))answers[step]=arr.filter(v=>v!==i);else if(arr.length<max)answers[step]=[...arr,i]}else{answers[step]=i+1;if(step<4){step++;render()}else{show("result");results()}return}render()};$("options").appendChild(b)});$("next").disabled=step<2?answers[step].length!==max:answers[step]===null;$("next").textContent=step===4?t.results:t.next;$("next").style.display=step>=2?"none":"";$("back").disabled=step===0}function results(){let t=tr(),list=labels[0][li()],prior=labels[1][li()];$("summary").innerHTML="<h3>"+t.mot+"</h3>"+answers[0].map(i=>'<span class="pill">'+list[i]+"</span>").join("")+"<h3>"+t.prior+"</h3>"+answers[1].map(i=>'<span class="pill">'+prior[i]+"</span>").join("")+"<p>"+t.life+": "+answers[2]+"/5 · "+t.support+": "+answers[3]+"/5 · "+t.growth+": "+answers[4]+"/5</p>";$("advice").innerHTML=t.advice.map(a=>"<p>• "+a+"</p>").join("")} $("lang").onchange=e=>{lang=e.target.value;translate()};$("start").onclick=()=>{show("quiz");render()};$("back").onclick=()=>{if(step>0)step--;render()};$("next").onclick=()=>{if(step<4){step++;render()}else{show("result");results()}};$("restart").onclick=()=>{step=0;answers=[[],[],null,null,null];show("intro")};translate();
+let lang="en",step=0,answers=[[],[],null,null,null];const $=id=>document.getElementById(id),tr=()=>T[lang],li=()=>({en:0,fr:1,es:2})[lang];function show(id){["intro","quiz","result","deep-details","deep-quiz","deep-report"].forEach(x=>{const el=$(x);if(el)el.classList.toggle("hidden",x!==id)})}function translate(){let t=tr();["tag","hero","sub","start","back","restart","resulttitle","prioritytitle","deep","transition"].forEach(k=>$(k).textContent=t[k]);if(!$("quiz").classList.contains("hidden"))render();if(!$("result").classList.contains("hidden"))results()}function render(){
+const t=tr();
+$("bar").style.width=((step+1)/5*100)+"%";
+$("count").textContent=(step+1)+" / 5";
+$("question").textContent=t.questions[step];
+$("hint").textContent=({fr:"Choisissez une réponse. Elle sera validée automatiquement.",en:"Choose one answer. It will be saved automatically.",es:"Elige una respuesta. Se guardará automáticamente."})[lang];
+$("options").innerHTML="";
+const words={fr:["Pas du tout d’accord","Plutôt pas d’accord","Neutre / mitigé","Plutôt d’accord","Tout à fait d’accord"],en:["Strongly disagree","Disagree","Neutral / mixed","Agree","Strongly agree"],es:["Totalmente en desacuerdo","En desacuerdo","Neutral / mixto","De acuerdo","Totalmente de acuerdo"]};
+const numeric=step>=2;
+$("options").classList.toggle("hw-likert",numeric);
+const opts=numeric?[1,2,3,4,5]:labels[step][li()];
+opts.forEach((label,i)=>{
+const btn=document.createElement("button");
+btn.type="button";
+btn.className="option"+(numeric?" hw-likert-option":"")+(numeric?(answers[step]===i+1?" active":""):(answers[step][0]===i?" active":""));
+if(numeric)btn.innerHTML="<strong>"+label+"</strong><small>"+words[lang][i]+"</small>";
+else btn.textContent=label;
+btn.onclick=()=>{
+if(numeric)answers[step]=i+1;else answers[step]=[i];
+if(step<4){step++;render()}else{show("result");results()}
+};
+$("options").appendChild(btn)
+});
+$("next").style.display="none";
+$("back").disabled=step===0;
+}function results(){let t=tr(),list=labels[0][li()],prior=labels[1][li()];$("summary").innerHTML="<h3>"+t.mot+"</h3>"+answers[0].map(i=>'<span class="pill">'+list[i]+"</span>").join("")+"<h3>"+t.prior+"</h3>"+answers[1].map(i=>'<span class="pill">'+prior[i]+"</span>").join("")+"<p>"+t.life+": "+answers[2]+"/5 · "+t.support+": "+answers[3]+"/5 · "+t.growth+": "+answers[4]+"/5</p>";$("advice").innerHTML=t.advice.map(a=>"<p>• "+a+"</p>").join("")} $("lang").onchange=e=>{lang=e.target.value;translate()};$("start").onclick=()=>{show("quiz");render()};$("back").onclick=()=>{if(step>0)step--;render()};$("next").onclick=()=>{if(step<4){step++;render()}else{show("result");results()}};$("restart").onclick=()=>{step=0;answers=[[],[],null,null,null];show("intro")};translate();
 
 const deepQuestions={
 en:[
