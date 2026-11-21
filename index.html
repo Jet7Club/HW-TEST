@@ -248,4 +248,74 @@ function launchAssessment(){deepIndex=0;deepAnswers=Array(25).fill(null);deepScr
 $("deep").onclick=(event)=>{event.preventDefault();launchAssessment()};
 
 $("lang").addEventListener("change",()=>{if(!$("deep-details").classList.contains("hidden"))renderDetails();if(!$("deep-quiz").classList.contains("hidden"))renderDeep();if(!$("deep-report").classList.contains("hidden"))renderReport()});
-</script></body></html>
+</script><style id="hw-first-five-sliders-style">
+.hw-slider-card{padding:16px;margin:13px 0;border:1px solid rgba(217,173,78,.38);border-radius:14px;background:rgba(217,173,78,.055)}
+.hw-slider-card label{display:block;font-size:1rem;line-height:1.5;margin-bottom:12px}
+.hw-slider-card input[type=range]{display:block;width:100%;accent-color:#D9AD4E;cursor:pointer;min-height:30px}
+.hw-slider-scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin-top:8px}
+.hw-slider-scale span{font-size:clamp(9px,1.5vw,12px);text-align:center;overflow-wrap:anywhere;opacity:.7}
+.hw-slider-scale span.selected{opacity:1;color:#F2D48B;font-weight:800;text-decoration:underline}
+.hw-slider-value{margin-top:10px;font-size:.95rem;color:#F2D48B;font-weight:700}
+</style><script id="hw-five-slider-questions-v1">
+(function(){
+const bank={
+fr:[
+["Ma vie actuelle m'apporte-t-elle le bonheur, l'équilibre et l'épanouissement que je recherche ?",["Je me sens heureux dans ma vie quotidienne.","Je suis satisfait de mon équilibre entre vie personnelle et professionnelle.","J'ai le sentiment de vivre une vie qui a du sens et me correspond."]],
+["Ce que je mange, bois et respire contribue-t-il à ma santé et à ma vitalité ?",["Mon alimentation contribue positivement à ma santé et à mon énergie.","L'eau que je bois est de bonne qualité et répond à mes besoins.","L'air que je respire favorise mon bien-être."]],
+["Mon mode de vie me permet-il de disposer de l'énergie physique et mentale dont j'ai besoin ?",["Je dispose d'une bonne énergie physique tout au long de la journée.","Je me sens équilibré mentalement et émotionnellement.","Mon sommeil et ma récupération me permettent de retrouver mon énergie."]],
+["Mes relations personnelles et professionnelles contribuent-elles à mon bien-être et à ma vitalité ?",["Mes relations personnelles m'apportent affection, soutien et bonheur.","Mes relations professionnelles sont positives et stimulantes.","Mon environnement relationnel me fait du bien."]],
+["Ma situation financière me permet-elle de vivre librement et de concrétiser mes aspirations ?",["Je me sens financièrement en sécurité.","Mes ressources me permettent de faire mes propres choix de vie.","Je dispose des moyens financiers nécessaires pour réaliser mes projets."]]],
+en:[
+["Does my current life bring me the happiness, balance and fulfilment I seek?",["I feel happy in my daily life.","I am satisfied with my work-life balance.","I feel my life is meaningful and reflects who I am."]],
+["Do what I eat, drink and breathe support my health and vitality?",["My diet supports my health and energy.","The water I drink is good quality and meets my needs.","The air I breathe supports my wellbeing."]],
+["Does my lifestyle give me the physical and mental energy I need?",["I have good physical energy throughout the day.","I feel mentally and emotionally balanced.","My sleep and recovery restore my energy."]],
+["Do my personal and professional relationships support my wellbeing and vitality?",["My personal relationships bring me affection, support and happiness.","My professional relationships are positive and stimulating.","My social environment contributes to my wellbeing."]],
+["Does my financial situation allow me to live freely and pursue my aspirations?",["I feel financially secure.","My resources allow me to make my own life choices.","I have the financial means to pursue my projects."]]],
+es:[
+["¿Mi vida actual me aporta la felicidad, el equilibrio y la realización que busco?",["Me siento feliz en mi vida diaria.","Estoy satisfecho con mi equilibrio personal y profesional.","Siento que mi vida tiene sentido y refleja quién soy."]],
+["¿Lo que como, bebo y respiro favorece mi salud y vitalidad?",["Mi alimentación favorece mi salud y energía.","El agua que bebo es de buena calidad y satisface mis necesidades.","El aire que respiro favorece mi bienestar."]],
+["¿Mi estilo de vida me proporciona la energía física y mental que necesito?",["Tengo buena energía física durante el día.","Me siento equilibrado mental y emocionalmente.","Mi sueño y descanso me ayudan a recuperar energía."]],
+["¿Mis relaciones personales y profesionales contribuyen a mi bienestar y vitalidad?",["Mis relaciones personales me aportan afecto, apoyo y felicidad.","Mis relaciones profesionales son positivas y estimulantes.","Mi entorno social contribuye a mi bienestar."]],
+["¿Mi situación financiera me permite vivir libremente y alcanzar mis aspiraciones?",["Me siento seguro económicamente.","Mis recursos me permiten tomar mis propias decisiones.","Dispongo de medios económicos para realizar mis proyectos."]]]
+};
+const scale={fr:["Pas du tout","Un peu","Moyennement","Beaucoup","Tout à fait"],en:["Not at all","A little","Moderately","A lot","Completely"],es:["Nada","Un poco","Moderadamente","Mucho","Totalmente"]};
+const saved=Array.from({length:5},()=>[null,null,null]);
+function draw(){
+const item=bank[lang][step],labels=scale[lang];
+document.getElementById('bar').style.width=((step+1)*20)+'%';
+document.getElementById('count').textContent=(step+1)+' / 5';
+document.getElementById('question').textContent=item[0];
+document.getElementById('hint').textContent={fr:'Déplacez les trois curseurs, puis continuez.',en:'Move all three sliders, then continue.',es:'Mueve los tres controles y continúa.'}[lang];
+const container=document.getElementById('options');container.classList.remove('hw-likert');container.replaceChildren();
+item[1].forEach((sentence,j)=>{
+const card=document.createElement('div');card.className='hw-slider-card';
+const label=document.createElement('label');label.textContent=sentence;label.htmlFor='hw-slider-'+j;
+const slider=document.createElement('input');slider.type='range';slider.id='hw-slider-'+j;slider.min=1;slider.max=5;slider.step=1;slider.value=saved[step][j]??3;slider.setAttribute('aria-label',sentence);
+const ticks=document.createElement('div');ticks.className='hw-slider-scale';const value=document.createElement('div');value.className='hw-slider-value';
+function update(){ticks.replaceChildren();labels.forEach((text,i)=>{const x=document.createElement('span');x.textContent=text;if(saved[step][j]===i+1)x.className='selected';ticks.appendChild(x)});value.textContent=saved[step][j]===null?'—':slider.value+'/5 — '+labels[Number(slider.value)-1];}
+slider.addEventListener('change',()=>{saved[step][j]=Number(slider.value);answers[step]=saved[step].slice();update();next.disabled=!saved[step].every(x=>x!==null);});
+slider.addEventListener('input',()=>{value.textContent=slider.value+'/5 — '+labels[Number(slider.value)-1]});
+card.append(label,slider,ticks,value);container.append(card);update();
+});
+const next=document.getElementById('choice-next');next.classList.remove('hidden');next.textContent=step===4?T[lang].results:T[lang].next;next.disabled=!saved[step].every(x=>x!==null);
+next.onclick=()=>{if(next.disabled)return;answers[step]=saved[step].slice();if(step===4){show('result');results()}else{step++;draw()}};
+document.getElementById('back').disabled=step===0;
+}
+render=draw;
+results=function(){
+const scores=saved.map(row=>Math.round(((row.reduce((a,b)=>a+(b??3),0)/3)-1)*25));
+const names={fr:['Bonheur et épanouissement','Santé et environnement','Énergie et vitalité','Relations et connexions','Liberté financière'],en:['Happiness and fulfilment','Health and environment','Energy and vitality','Relationships and connections','Financial freedom'],es:['Felicidad y realización','Salud y entorno','Energía y vitalidad','Relaciones y conexiones','Libertad financiera']}[lang];
+const title={fr:'Votre premier bilan',en:'Your first insights',es:'Tus primeros resultados'}[lang];
+const note={fr:'Ce questionnaire mesure votre ressenti et ne constitue pas un diagnostic médical.',en:'This questionnaire reflects your perceptions and is not a medical diagnosis.',es:'Este cuestionario refleja tus percepciones y no constituye un diagnóstico médico.'}[lang];
+const esc=x=>String(x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+document.getElementById('summary').innerHTML='<h2>'+esc(title)+'</h2>'+names.map((n,i)=>'<p><strong>'+esc(n)+'</strong> : '+scores[i]+'/100</p>').join('')+'<p>'+esc(note)+'</p>';
+const weakest=scores.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v).slice(0,3);
+document.getElementById('advice').innerHTML='<p>'+({fr:'Trois axes à explorer : ',en:'Three areas to explore: ',es:'Tres áreas para explorar: '}[lang])+weakest.map(x=>esc(names[x.i])).join(' · ')+'</p>';
+window.HW_FIRST_REPORT={title,lines:names.map((n,i)=>n+': '+scores[i]+'/100'),lang};
+};
+document.getElementById('restart').addEventListener('click',()=>{for(let i=0;i<5;i++)saved[i]=[null,null,null];answers=[[],[],[],[],[]];});
+const originalTranslate=translate;translate=function(){originalTranslate();if(!document.getElementById('quiz').classList.contains('hidden'))draw();};
+const oldDeepReport=renderReport;
+if(typeof oldDeepReport==='function'){renderReport=function(){oldDeepReport();const payload=window.HW_FIRST_REPORT;};}
+draw();
+})();</script></body></html>
